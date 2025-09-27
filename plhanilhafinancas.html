@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InteliInveste - Dashboard de Investimentos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .dashboard {
+            padding: 30px;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-left: 5px solid #3498db;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .card.positive {
+            border-left-color: #27ae60;
+        }
+
+        .card.negative {
+            border-left-color: #e74c3c;
+        }
+
+        .card.warning {
+            border-left-color: #f39c12;
+        }
+
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .card .change {
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .change.positive { color: #27ae60; }
+        .change.negative { color: #e74c3c; }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .portfolio-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .add-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-left: auto;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .add-btn:hover {
+            background: #2980b9;
+        }
+
+        .portfolio-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .portfolio-table th,
+        .portfolio-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .portfolio-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 1px;
+        }
+
+        .portfolio-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .input-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .input-group input,
+        .input-group select {
+            padding: 10px;
+            border: 2px solid #ecf0f1;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .buy-btn, .sell-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .buy-btn {
+            background: #27ae60;
+            color: white;
+        }
+
+        .buy-btn:hover {
+            background: #219a52;
+        }
+
+        .sell-btn {
+            background: #f39c12;
+            color: white;
+        }
+
+        .sell-btn:hover {
+            background: #e67e22;
+        }
+
+        .status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .status.barato {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.caro {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.neutro {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .alerts-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .alert-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #f39c12;
+            background: #fffbf0;
+        }
+
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-form {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Controle do Rewe</h1>
+            <p>Dashboard Intuitivo de Controle de Investimentos</p>
+        </div>
+
+        <div class="dashboard">
+            <!-- Cards de Resumo -->
+            <div class="summary-cards">
+                <div class="card">
+                    <h3>Patrimônio Total</h3>
+                    <div class="value" id="patrimonioTotal">R$ 0,00</div>
+                    <div class="change positive" id="variacaoPatrimonio">+0,00%</div>
+                    <div class="card">
+                    <h3>Rentabilidade Anual</h3>
+                    <div class="value" id="rentabilidadeAnual">0,00%</div>
+                    <div class="change">vs CDI: <span id="vsCDI">0,00%</span></div>
+                </div>
+                <div class="card positive">
+                    <h3>Status do Mercado</h3>
+                    <div class="value" id="statusMercado">🔄</div>
+                    <div class="change" id="statusMercadoTexto">Conectando...</div>
+                </div>
+            </div>
+                <div class="card positive">
+                    <h3>Dividendos Recebidos</h3>
+                    <div class="value" id="dividendosTotal">R$ 0,00</div>
+                    <div class="change positive">+R$ 0,00 (mês)</div>
+                </div>
+                <div class="card">
+                    <h3>Lucro/Prejuízo Anual</h3>
+                    <div class="value" id="lucroPrejuizo">R$ 0,00</div>
+                    <div class="change" id="percentualLP">0,00%</div>
+                </div>
+                <div class="card">
+                    <h3>Lucro/Prejuízo Mensal</h3>
+                    <div class="value" id="lucroPrejuizoMensal">R$ 0,00</div>
+                    <div class="change" id="percentualLPMensal">0,00%</div>
+                </div>
+                <div class="card warning">
+                    <h3>Última Atualização</h3>
+                    <div class="value" id="ultimaAtualizacaoDisplay">Carregando...</div>
+                    <div class="change">API em tempo real</div>
+                </div>
+                <div class="card">
+                    <h3>Preço Médio Geral</h3>
+                    <div class="value" id="precoMedio">R$ 0,00</div>
+                    <div class="change">Carteira balanceada</div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="charts-section">
+                <div class="chart-container">
+                    <div class="chart-title">Distribuição por Setor</div>
+                    <canvas id="setorChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Tipos de Investimento</div>
+                    <canvas id="tipoChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Portfólio -->
+            <div class="portfolio-section">
+                <div class="section-title">
+                    Meu Portfólio
+                    <button class="add-btn" onclick="toggleForm()">+ Adicionar Investimento</button>
+                    <button class="add-btn" onclick="atualizarPrecosTempo()" style="margin-left: 10px; background: #27ae60;">🔄 Atualizar Preços</button>
+                </div>
+
+                <div class="input-form" id="inputForm" style="display: none;">
+                    <div class="input-group">
+                        <label>Código</label>
+                        <input type="text" id="codigo" placeholder="Ex: PETR4">
+                    </div>
+                    <div class="input-group">
+                        <label>Quantidade</label>
+                        <input type="number" id="quantidade" placeholder="100">
+                    </div>
+                    <div class="input-group">
+                        <label>Preço Médio</label>
+                        <input type="number" step="0.01" id="precoMedioInput" placeholder="25.50">
+                    </div>
+                    <div class="input-group">
+                        <label>Preço Atual</label>
+                        <input type="number" step="0.01" id="precoAtual" placeholder="27.30">
+                    </div>
+                    <div class="input-group">
+                        <label>Tipo</label>
+                        <select id="tipo">
+                            <option value="Ação">Ação</option>
+                            <option value="FII">FII</option>
+                            <option value="Stock">Stock</option>
+                            <option value="Renda Fixa">Renda Fixa</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Setor</label>
+                        <select id="setor">
+                            <option value="Petróleo">Petróleo</option>
+                            <option value="Bancos">Bancos</option>
+                            <option value="Mineração">Mineração</option>
+                            <option value="Telecomunicações">Telecomunicações</option>
+                            <option value="Varejo">Varejo</option>
+                            <option value="Energia Elétrica">Energia Elétrica</option>
+                            <option value="Tecnologia">Tecnologia</option>
+                            <option value="Imobiliário">Imobiliário</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="align-self: end;">
+                        <button class="add-btn" onclick="adicionarInvestimento()">Adicionar</button>
+                    </div>
+                </div>
+
+                <table class="portfolio-table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Tipo</th>
+                            <th>Setor</th>
+                            <th>Qtd</th>
+                            <th>Preço Médio</th>
+                            <th>Preço Atual</th>
+                            <th>Variação (%)</th>
+                            <th>Total Investido</th>
+                            <th>Valor Atual</th>
+                            <th>L/P</th>
+                            <th>Status</th>
+                            <th>Última Atualização</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="portfolioTableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Alertas -->
+            <div class="alerts-section">
+                <div class="section-title">Alertas e Recomendações</div>
+                <div id="alertsContainer">
+                    <div class="alert-item">
+                        🎯 <strong>Rebalanceamento:</strong> Sua carteira está concentrada em petróleo (35%). Considere diversificar.
+                    </div>
+                    <div class="alert-item">
+                        📊 <strong>Oportunidade:</strong> PETR4 está 15% abaixo do preço médio. Pode ser uma boa oportunidade de compra.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Compra/Venda -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Comprar Ativo</div>
+                <button class="close-btn" onclick="fecharModal()">&times;</button>
+            </div>
+            
+            <div class="modal-form">
+                <div class="input-group">
+                    <label>Ativo</label>
+                    <input type="text" id="modalCodigo" readonly>
+                </div>
+                
+                <div class="input-group">
+                    <label>Quantidade</label>
+                    <input type="number" id="modalQuantidade" placeholder="Ex: 100" min="1">
+                </div>
+                
+                <div class="input-group">
+                    <label>Preço por ação</label>
+                    <input type="number" step="0.01" id="modalPreco" placeholder="Ex: 25.50">
+                </div>
+                
+                <div class="transaction-summary">
+                    <h4>Resumo da Operação</h4>
+                    <div class="summary-item">
+                        <span>Quantidade:</span>
+                        <span id="summaryQuantidade">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Preço unitário:</span>
+                        <span id="summaryPreco">R$ 0,00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Taxa de corretagem (0.1%):</span>
+                        <span id="summaryTaxa">R$ 0,00</span>
+                    </div>
+                    <div class="summary-item total">
+                        <span>Total:</span>
+                        <span id="summaryTotal">R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="cancel-btn" onclick="fecharModal()">Cancelar</button>
+                <button class="confirm-btn" id="confirmBtn" onclick="confirmarTransacao()">Confirmar Compra</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados globais
+        let investimentos = [
+            {
+                codigo: 'PETR4',
+                tipo: 'Ação',
+                setor: 'Petróleo',
+                quantidade: 100,
+                precoMedio: 25.50,
+                precoAtual: 27.30,
+                precoMesAnterior: 26.80,
+                variacao: 0,
+                ultimaAtualizacao: null,
+                status: 'caro'
+            },
+            {
+                codigo: 'VALE3',
+                tipo: 'Ação',
+                setor: 'Mineração',
+                quantidade: 50,
+                precoMedio: 65.80,
+                precoAtual: 62.10,
+                precoMesAnterior: 63.50,
+                variacao: 0,
+                ultimaAtualizacao: null,
+                status: 'barato'
+            },
+            {
+                codigo: 'BBDC4',
+                tipo: 'Ação',
+                setor: 'Bancos',
+                quantidade: 200,
+                precoMedio: 15.20,
+                precoAtual: 16.45,
+                precoMesAnterior: 15.90,
+                variacao: 0,
+                ultimaAtualizacao: null,
+                status: 'neutro'
+            }
+        ];
+
+        let setorChart, tipoChart;
+        let cdiAnual = 10.75; // CDI atual aproximado
+        let transacaoAtual = {}; // Para armazenar dados da transação atual
+        let ultimaAtualizacao = null;
+        let intervaloBusca = null;
+
+        function toggleForm() {
+            const form = document.getElementById('inputForm');
+            form.style.display = form.style.display === 'none' ? 'grid' : 'none';
+        }
+
+        function adicionarInvestimento() {
+            const codigo = document.getElementById('codigo').value;
+            const quantidade = parseInt(document.getElementById('quantidade').value);
+            const precoMedio = parseFloat(document.getElementById('precoMedioInput').value);
+            const precoAtual = parseFloat(document.getElementById('precoAtual').value);
+            const tipo = document.getElementById('tipo').value;
+            const setor = document.getElementById('setor').value;
+
+            if (codigo && quantidade && precoMedio && precoAtual) {
+                const status = precoAtual > precoMedio * 1.05 ? 'caro' : 
+                              precoAtual < precoMedio * 0.95 ? 'barato' : 'neutro';
+
+                investimentos.push({
+                    codigo,
+                    tipo,
+                    setor,
+                    quantidade,
+                    precoMedio,
+                    precoAtual,
+                    precoMesAnterior: precoAtual * (0.95 + Math.random() * 0.10), // Simula preço do mês anterior
+                    variacao: 0,
+                    ultimaAtualizacao: new Date(),
+                    status
+                });
+
+                // Limpar formulário
+                document.getElementById('codigo').value = '';
+                document.getElementById('quantidade').value = '';
+                document.getElementById('precoMedioInput').value = '';
+                document.getElementById('precoAtual').value = '';
+
+                toggleForm();
+                atualizarDashboard();
+            }
+        }
+
+        function removerInvestimento(index) {
+            if (confirm(`Tem certeza que deseja remover ${investimentos[index].codigo} da carteira?`)) {
+                investimentos.splice(index, 1);
+                atualizarDashboard();
+            }
+        }
+
+        function abrirModalCompra(index) {
+            const investimento = investimentos[index];
+            transacaoAtual = {
+                index: index,
+                tipo: 'compra',
+                investimento: investimento
+            };
+
+            document.getElementById('modalTitle').textContent = `Comprar ${investimento.codigo}`;
+            document.getElementById('modalCodigo').value = investimento.codigo;
+            document.getElementById('modalQuantidade').value = '';
+            document.getElementById('modalPreco').value = investimento.precoAtual.toFixed(2);
+            document.getElementById('confirmBtn').textContent = 'Confirmar Compra';
+            document.getElementById('confirmBtn').style.background = '#27ae60';
+            
+            atualizarResumoTransacao();
+            document.getElementById('transactionModal').style.display = 'block';
+        }
+
+        function abrirModalVenda(index) {
+            const investimento = investimentos[index];
+            transacaoAtual = {
+                index: index,
+                tipo: 'venda',
+                investimento: investimento
+            };
+
+            document.getElementById('modalTitle').textContent = `Vender ${investimento.codigo}`;
+            document.getElementById('modalCodigo').value = investimento.codigo;
+            document.getElementById('modalQuantidade').value = '';
+            document.getElementById('modalQuantidade').max = investimento.quantidade;
+            document.getElementById('modalPreco').value = investimento.precoAtual.toFixed(2);
+            document.getElementById('confirmBtn').textContent = 'Confirmar Venda';
+            document.getElementById('confirmBtn').style.background = '#f39c12';
+            
+            atualizarResumoTransacao();
+            document.getElementById('transactionModal').style.display = 'block';
+        }
+
+        function fecharModal() {
+            document.getElementById('transactionModal').style.display = 'none';
+            transacaoAtual = {};
+        }
+
+        function atualizarResumoTransacao() {
+            const quantidade = parseInt(document.getElementById('modalQuantidade').value) || 0;
+            const preco = parseFloat(document.getElementById('modalPreco').value) || 0;
+            const subtotal = quantidade * preco;
+            const taxa = subtotal * 0.001; // 0.1% de taxa
+            const total = subtotal + taxa;
+
+            document.getElementById('summaryQuantidade').textContent = quantidade;
+            document.getElementById('summaryPreco').textContent = `R$ ${preco.toFixed(2)}`;
+            document.getElementById('summaryTaxa').textContent = `R$ ${taxa.toFixed(2)}`;
+            document.getElementById('summaryTotal').textContent = `R$ ${total.toFixed(2)}`;
+        }
+
+        function confirmarTransacao() {
+            const quantidade = parseInt(document.getElementById('modalQuantidade').value);
+            const preco = parseFloat(document.getElementById('modalPreco').value);
+            
+            if (!quantidade || !preco || quantidade <= 0 || preco <= 0) {
+                alert('Por favor, preencha todos os campos com valores válidos.');
+                return;
+            }
+
+            const investimento = investimentos[transacaoAtual.index];
+            
+            if (transacaoAtual.tipo === 'compra') {
+                // Lógica de compra - recalcula preço médio
+                const totalAtual = investimento.quantidade * investimento.precoMedio;
+                const novaCompra = quantidade * preco;
+                const novaQuantidade = investimento.quantidade + quantidade;
+                const novoPrecoMedio = (totalAtual + novaCompra) / novaQuantidade;
+                
+                investimento.quantidade = novaQuantidade;
+                investimento.precoMedio = novoPrecoMedio;
+                
+                // Adicionar alerta de compra
+                adicionarAlerta(`✅ <strong>Compra realizada:</strong> ${quantidade} ${investimento.codigo} por R$ ${preco.toFixed(2)} cada. Novo preço médio: R$ ${novoPrecoMedio.toFixed(2)}`);
+                
+            } else if (transacaoAtual.tipo === 'venda') {
+                // Lógica de venda
+                if (quantidade > investimento.quantidade) {
+                    alert(`Você só possui ${investimento.quantidade} ações de ${investimento.codigo}.`);
+                    return;
+                }
+                
+                const valorVenda = quantidade * preco;
+                const custoVendido = quantidade * investimento.precoMedio;
+                const lucroVenda = valorVenda - custoVendido;
+                
+                investimento.quantidade -= quantidade;
+                
+                // Se vendeu tudo, remove o investimento
+                if (investimento.quantidade === 0) {
+                    investimentos.splice(transacaoAtual.index, 1);
+                }
+                
+                // Adicionar alerta de venda
+                const lucroTexto = lucroVenda >= 0 ? `lucro de R$ ${lucroVenda.toFixed(2)}` : `prejuízo de R$ ${Math.abs(lucroVenda).toFixed(2)}`;
+                adicionarAlerta(`💰 <strong>Venda realizada:</strong> ${quantidade} ${investimento.codigo} por R$ ${preco.toFixed(2)} cada. ${lucroTexto}.`);
+            }
+
+            // Atualizar status do ativo restante (se houver)
+            if (investimento.quantidade > 0) {
+                investimento.status = investimento.precoAtual > investimento.precoMedio * 1.05 ? 'caro' : 
+                                    investimento.precoAtual < investimento.precoMedio * 0.95 ? 'barato' : 'neutro';
+            }
+
+            fecharModal();
+            atualizarDashboard();
+        }
+
+        function adicionarAlerta(mensagem) {
+            const alertsContainer = document.getElementById('alertsContainer');
+            const novoAlerta = document.createElement('div');
+            novoAlerta.className = 'alert-item';
+            novoAlerta.innerHTML = mensagem;
+            
+            // Adicionar no início
+            alertsContainer.insertBefore(novoAlerta, alertsContainer.firstChild);
+            
+            // Remover após 10 segundos
+            setTimeout(() => {
+                if (novoAlerta.parentNode) {
+                    novoAlerta.remove();
+                }
+            }, 10000);
+        }
+
+        // === INTEGRAÇÃO COM APIs DE MERCADO ===
+        
+        async function buscarPrecosBrapi(codigos) {
+            try {
+                const codigosString = codigos.join(',');
+                const response = await fetch(`https://brapi.dev/api/quote/${codigosString}?token=demo`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Erro na API: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return data.results || [];
+            } catch (error) {
+                console.error('Erro ao buscar preços na Brapi:', error);
+                return null;
+            }
+        }
+
+        async function buscarPrecosYahoo(codigos) {
+            try {
+                // Fallback usando uma API pública do Yahoo Finance
+                const promises = codigos.map(async (codigo) => {
+                    const simbolo = codigo + '.SA'; // Adiciona .SA para ações brasileiras
+                    const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${simbolo}`);
+                    const data = await response.json();
+                    
+                    if (data.chart && data.chart.result && data.chart.result[0]) {
+                        const result = data.chart.result[0];
+                        const meta = result.meta;
+                        const quote = result.indicators.quote[0];
+                        
+                        return {
+                            symbol: codigo,
+                            regularMarketPrice: meta.regularMarketPrice,
+                            regularMarketChange: meta.regularMarketPrice - meta.previousClose,
+                            regularMarketChangePercent: ((meta.regularMarketPrice - meta.previousClose) / meta.previousClose) * 100,
+                            regularMarketTime: new Date(meta.regularMarketTime * 1000)
+                        };
+                    }
+                    return null;
+                });
+                
+                const results = await Promise.all(promises);
+                return results.filter(r => r !== null);
+            } catch (error) {
+                console.error('Erro ao buscar preços no Yahoo:', error);
+                return null;
+            }
+        }
+
+        async function atualizarPrecosTempo() {
+            document.getElementById('statusMercado').textContent = '🔄';
+            document.getElementById('statusMercadoTexto').textContent = 'Atualizando...';
+            
+            const codigos = investimentos.map(inv => inv.codigo);
+            let dadosMercado = null;
+            
+            // Tentar primeiro a Brapi
+            dadosMercado = await buscarPrecosBrapi(codigos);
+            
+            // Se falhar, tentar Yahoo Finance
+            if (!dadosMercado || dadosMercado.length === 0) {
+                console.log('Brapi falhou, tentando Yahoo Finance...');
+                dadosMercado = await buscarPrecosYahoo(codigos);
+            }
+            
+            if (dadosMercado && dadosMercado.length > 0) {
+                let ativos_atualizados = 0;
+                
+                dadosMercado.forEach(dado => {
+                    const investimento = investimentos.find(inv => 
+                        inv.codigo === dado.symbol || 
+                        inv.codigo === dado.stock
+                    );
+                    
+                    if (investimento) {
+                        const precoAnterior = investimento.precoAtual;
+                        
+                        // Atualizar preço (Brapi usa 'regularMarketPrice', Yahoo também)
+                        investimento.precoAtual = dado.regularMarketPrice || dado.price || precoAnterior;
+                        
+                        // Calcular variação percentual
+                        investimento.variacao = dado.regularMarketChangePercent || 
+                                              dado.change_percent || 
+                                              ((investimento.precoAtual - precoAnterior) / precoAnterior) * 100;
+                        
+                        // Atualizar timestamp
+                        investimento.ultimaAtualizacao = new Date();
+                        
+                        // Recalcular status
+                        investimento.status = investimento.precoAtual > investimento.precoMedio * 1.05 ? 'caro' : 
+                                            investimento.precoAtual < investimento.precoMedio * 0.95 ? 'barato' : 'neutro';
+                        
+                        ativos_atualizados++;
+                    }
+                });
+                
+                ultimaAtualizacao = new Date();
+                document.getElementById('statusMercado').textContent = '✅';
+                document.getElementById('statusMercadoTexto').textContent = `${ativos_atualizados} ativos atualizados`;
+                
+                adicionarAlerta(`📈 <strong>Preços atualizados:</strong> ${ativos_atualizados} ativos sincronizados com o mercado às ${ultimaAtualizacao.toLocaleTimeString('pt-BR')}`);
+            } else {
+                document.getElementById('statusMercado').textContent = '❌';
+                document.getElementById('statusMercadoTexto').textContent = 'Erro na conexão';
+                adicionarAlerta('⚠️ <strong>Erro:</strong> Não foi possível conectar com as APIs de mercado. Verifique sua conexão.');
+            }
+            
+            atualizarDashboard();
+        }
+
+        async function buscarDividendos(codigo) {
+            try {
+                // Buscar dados de dividendos (usando Status Invest como referência)
+                // Esta é uma implementação simplificada - na prática, você precisaria de uma API específica
+                const response = await fetch(`https://statusinvest.com.br/acao/companytickerprovents?ticker=${codigo}`, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return data;
+                }
+                return null;
+            } catch (error) {
+                console.error('Erro ao buscar dividendos:', error);
+                return null;
+            }
+        }
+
+        function atualizarTabela() {
+            const tbody = document.getElementById('portfolioTableBody');
+            tbody.innerHTML = '';
+
+            investimentos.forEach((inv, index) => {
+                const totalInvestido = inv.quantidade * inv.precoMedio;
+                const valorAtual = inv.quantidade * inv.precoAtual;
+                const lucroPreJuizo = valorAtual - totalInvestido;
+                const percentualLP = ((lucroPreJuizo / totalInvestido) * 100);
+                const ultimaAtualizacaoTexto = inv.ultimaAtualizacao ? 
+                    inv.ultimaAtualizacao.toLocaleTimeString('pt-BR') : 'Nunca';
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${inv.codigo}</strong></td>
+                    <td>${inv.tipo}</td>
+                    <td>${inv.setor}</td>
+                    <td>${inv.quantidade}</td>
+                    <td>R$ ${inv.precoMedio.toFixed(2)}</td>
+                    <td>R$ ${inv.precoAtual.toFixed(2)}</td>
+                    <td style="color: ${inv.variacao >= 0 ? '#27ae60' : '#e74c3c'}">
+                        ${inv.variacao >= 0 ? '+' : ''}${inv.variacao.toFixed(2)}%
+                    </td>
+                    <td>R$ ${totalInvestido.toFixed(2)}</td>
+                    <td>R$ ${valorAtual.toFixed(2)}</td>
+                    <td style="color: ${lucroPreJuizo >= 0 ? '#27ae60' : '#e74c3c'}">
+                        ${lucroPreJuizo >= 0 ? '+' : ''}R$ ${lucroPreJuizo.toFixed(2)} (${percentualLP.toFixed(2)}%)
+                    </td>
+                    <td><span class="status ${inv.status}">${inv.status.toUpperCase()}</span></td>
+                    <td style="font-size: 0.8em; color: #7f8c8d;">${ultimaAtualizacaoTexto}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="buy-btn" onclick="abrirModalCompra(${index})">Comprar</button>
+                            <button class="sell-btn" onclick="abrirModalVenda(${index})">Vender</button>
+                            <button class="remove-btn" onclick="removerInvestimento(${index})">Remover</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function atualizarCards() {
+            const totalInvestido = investimentos.reduce((sum, inv) => sum + (inv.quantidade * inv.precoMedio), 0);
+            const valorAtual = investimentos.reduce((sum, inv) => sum + (inv.quantidade * inv.precoAtual), 0);
+            const valorMesAnterior = investimentos.reduce((sum, inv) => sum + (inv.quantidade * inv.precoMesAnterior), 0);
+            
+            // Cálculos anuais
+            const lucroPreJuizo = valorAtual - totalInvestido;
+            const percentualLP = totalInvestido > 0 ? ((lucroPreJuizo / totalInvestido) * 100) : 0;
+            
+            // Cálculos mensais
+            const lucroPreJuizoMensal = valorAtual - valorMesAnterior;
+            const percentualLPMensal = valorMesAnterior > 0 ? ((lucroPreJuizoMensal / valorMesAnterior) * 100) : 0;
+            
+            // Rentabilidade anual
+            const rentabilidadeAnual = percentualLP;
+            const vsCDI = rentabilidadeAnual - cdiAnual;
+
+            document.getElementById('patrimonioTotal').textContent = `R$ ${valorAtual.toFixed(2)}`;
+            
+            // Lucro/Prejuízo Anual
+            document.getElementById('lucroPrejuizo').textContent = `R$ ${lucroPreJuizo.toFixed(2)}`;
+            document.getElementById('percentualLP').textContent = `${percentualLP.toFixed(2)}%`;
+            document.getElementById('percentualLP').className = lucroPreJuizo >= 0 ? 'change positive' : 'change negative';
+            
+            // Lucro/Prejuízo Mensal
+            document.getElementById('lucroPrejuizoMensal').textContent = `R$ ${lucroPreJuizoMensal.toFixed(2)}`;
+            document.getElementById('percentualLPMensal').textContent = `${percentualLPMensal.toFixed(2)}%`;
+            document.getElementById('percentualLPMensal').className = lucroPreJuizoMensal >= 0 ? 'change positive' : 'change negative';
+            
+            // Outros campos
+            document.getElementById('precoMedio').textContent = `R$ ${(totalInvestido / investimentos.reduce((sum, inv) => sum + inv.quantidade, 1)).toFixed(2)}`;
+            document.getElementById('rentabilidadeAnual').textContent = `${rentabilidadeAnual.toFixed(2)}%`;
+            document.getElementById('vsCDI').textContent = `${vsCDI >= 0 ? '+' : ''}${vsCDI.toFixed(2)}%`;
+            document.getElementById('vsCDI').style.color = vsCDI >= 0 ? '#27ae60' : '#e74c3c';
+            
+            // Atualizar última atualização
+            if (ultimaAtualizacao) {
+                document.getElementById('ultimaAtualizacaoDisplay').textContent = ultimaAtualizacao.toLocaleTimeString('pt-BR');
+            }
+        }
+
+        function criarGraficos() {
+            // Gráfico por Setor
+            const setorData = {};
+            investimentos.forEach(inv => {
+                const valor = inv.quantidade * inv.precoAtual;
+                setorData[inv.setor] = (setorData[inv.setor] || 0) + valor;
+            });
+
+            const ctxSetor = document.getElementById('setorChart').getContext('2d');
+            if (setorChart) setorChart.destroy();
+            
+            setorChart = new Chart(ctxSetor, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(setorData),
+                    datasets: [{
+                        data: Object.values(setorData),
+                        backgroundColor: [
+                            '#3498db', '#e74c3c', '#f39c12', '#27ae60',
+                            '#9b59b6', '#1abc9c', '#34495e', '#e67e22'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Gráfico por Tipo
+            const tipoData = {};
+            investimentos.forEach(inv => {
+                const valor = inv.quantidade * inv.precoAtual;
+                tipoData[inv.tipo] = (tipoData[inv.tipo] || 0) + valor;
+            });
+
+            const ctxTipo = document.getElementById('tipoChart').getContext('2d');
+            if (tipoChart) tipoChart.destroy();
+            
+            tipoChart = new Chart(ctxTipo, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(tipoData),
+                    datasets: [{
+                        data: Object.values(tipoData),
+                        backgroundColor: [
+                            '#2ecc71', '#3498db', '#9b59b6', '#f39c12'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function atualizarDashboard() {
+            atualizarTabela();
+            atualizarCards();
+            criarGraficos();
+        }
+
+        // Inicializar dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            atualizarDashboard();
+            
+            // Atualizar preços automaticamente na inicialização
+            setTimeout(atualizarPrecosTempo, 2000);
+            
+            // Event listeners para atualizar resumo da transação
+            document.getElementById('modalQuantidade').addEventListener('input', atualizarResumoTransacao);
+            document.getElementById('modalPreco').addEventListener('input', atualizarResumoTransacao);
+            
+            // Fechar modal clicando fora dele
+            window.addEventListener('click', function(event) {
+                const modal = document.getElementById('transactionModal');
+                if (event.target === modal) {
+                    fecharModal();
+                }
+            });
+            
+            // Atualizar preços a cada 5 minutos (300000ms) - respeitando limites da API
+            intervaloBusca = setInterval(atualizarPrecosTempo, 300000);
+            
+            // Simular pequenas variações entre as atualizações principais (opcional)
+            setInterval(() => {
+                if (Math.random() < 0.3) { // 30% de chance de pequena variação
+                    investimentos.forEach(inv => {
+                        const microVariacao = (Math.random() - 0.5) * 0.002; // ±0.1%
+                        inv.precoAtual = Math.max(0.01, inv.precoAtual * (1 + microVariacao));
+                    });
+                    atualizarDashboard();
+                }
+            }, 30000); // A cada 30 segundos
+        });
+    </script>
+</body>
+</html>
